@@ -1,0 +1,21 @@
+.dropdown-item.text-grey {
+    /* color: grey; Set text color to grey */
+    /* background-color: black; */
+  }
+  
+  .dropdown-item.text-grey:hover {
+    /* color: white; Change text color to white on hover */
+    /* background-color: black; */
+  }
+
+/* Remove arrow buttons from dropdowns */
+.navbar-nav .dropdown-toggle::after {
+  display: none;
+}
+
+.dropdown-item-custom:hover {
+  border-left: 5px solid red; /* Red border on hover */
+  background-color: black; /* Optional background color on hover */
+}
+
+  

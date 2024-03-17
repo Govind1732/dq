@@ -1,0 +1,32 @@
+/* body {
+  margin: 0;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
+    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
+    sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+code {
+  font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
+    monospace;
+} */
+
+@font-face {
+  font-family: verizon-regular;
+  src: url("./fonts/NHaasGroteskTXPro-55Rg.ttf") format("truetype");
+}
+
+.accordion{
+  --bs-accordion-btn-bg:#000000;
+}
+
+.file-input:focus {
+  border-color: red; /* Change border color to red when input is focused */
+  box-shadow: 0 0 0 0.25rem rgba(255, 0, 0, 0.25); /* Add red shadow effect */
+}
+*{
+  padding:0;
+  margin:0;
+  box-sizing:border-box;
+}
