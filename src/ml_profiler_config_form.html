@@ -1,0 +1,425 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Document</title>
+        <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+        <link rel="icon"  type= "image/png" href="{% static 'css/images/verizon-red-icon-black (1).png' %}">
+       <link href="//maxcdn.bootstrapcdn.com/bootstrap/4.1.1/css/bootstrap.min.css" rel="stylesheet" id="bootstrap-css">
+       <script src="//maxcdn.bootstrapcdn.com/bootstrap/4.1.1/js/bootstrap.min.js"></script>
+    </head>
+    <div id="pageloader">
+        <img src="http://cdnjs.cloudflare.com/ajax/libs/semantic-ui/0.16.1/images/loader-large.gif" alt="processing..." />
+     </div>
+    <header>
+            
+        <img src="{% static 'css/images/verizon-red-icon-black (1).png' %}" id="left-image1" alt="Left image 1">
+        <img src="{% static 'css/images/DQaaSlogo (1) (1).png' %}" id="left-image2" alt="Left image 2">
+        <img class="right-img" src="{% static 'css/images/beta3 (2) (1).png' %}" alt="Right image">
+    
+        <nav>
+            <a href="http://tdcldizcva002.ebiz.verizon.com:8000/self_serve2/search/" target="_blank" rel="noopener noreferrer">Fetch ML Reports Here</a> 
+            
+            
+            
+        
+        
+        </nav>
+    </header>
+    <h2>ML Profiling Page</h2>
+<body>
+    <form id="connectionForm" action="{% url 'dispatch_MLProfile_data' %}" method="post">
+        {% csrf_token %}
+        
+
+        <label for="data_source">Data Source</label>
+        <select name="data_source" id="data_source" onchange="toggleProjectField()" required>
+            <option value="" selected disabled>Select Environment</option>
+            <option value="GCP">GCP</option>
+            <option value="TD">Teradata</option>
+        </select>
+        <div id="formFieldContainer" style="display: block;">
+            <label for="project_name" >Select Project</label>
+            <input type="text" name="project_name" id="project_name" >
+        </div>
+
+            <label for="dbname">Select Database</label>
+            <input type="text" name="dbname" id="dbname" required>
+
+            <label for="table_name">Select Tables</label>
+            <input type="text" name="table_name" id="table_name" required>
+        <div id="connectButton">
+            <button type="button"  id="connectButton" onclick="checkAccess()">Check For Connectivity</button>
+        </div>
+    
+    <div id="resultMessage"></div>
+
+    <div id="additionalFields" style="display: none;">
+        <label for="incr_col">Incremental Column</label>
+        <input type="text" id="incr_col" name="incr_col">
+        
+        <label for="incr_cond">Incremental Condition</label>
+        <input type="text" id="incr_cond" name="incr_cond">
+        
+        <label for="email">Email Distro</label>
+        <input type="email" id="email" name="email">
+
+        <button type="submit" id="submitButton">Profile</button>
+    </div>
+    </form>
+    <script>
+        $(document).ready(function () {
+            $("#connectButton").click(function () {
+                console.log("inside");
+                $("#pageloader").fadeIn();
+
+                var data_source = $("#data_source").val();
+                var project_name = $("#project_name").val();
+                var dbname = $("#dbname").val();
+                var table_name = $("#table_name").val();
+                console.log(project_name,dbname, table_name)
+
+                $.ajax({
+                    type: 'POST',
+                    url: "ui_fetch/",
+                    data: {
+                        data_source:data_source,
+                        project_name: project_name,
+                        dbname: dbname,
+                        table_name: table_name
+                    },
+                    dataType: "json",
+                    success: function(data) {
+                        $("#pageloader").fadeOut();
+                        if (data.combination_exists) {
+                            alert("Connectivity/Access doesnot exist. Redirecting to marketplace to raise a request");
+                            window.open('https://marketplace.verizon.com/#/subscriptionReqForm', '_blank');                            
+                            $("#additionalFields").hide();
+                        } else {
+                            alert("Connectivity/Access available. Please fill the remaining fields for profiling")
+                  
+                            document.getElementById("additionalFields").style.display = 'block';
+                            document.getElementById("connectButton").style.display = 'none'
+							console.log("inside populate");
+                            $.ajax({
+                                
+                                url: "autopopulate_columns/",
+                                type: 'POST',
+                                data : {
+                                    data_source:data_source,
+                                    project_name: project_name,
+                                    dbname: dbname,
+                                    table_name: table_name
+                                },
+                                success: function(columnData) {
+                                    console.log("column data", columnData)
+                                    $('#incr_col').val(columnData.INCR_DT_COL);
+                                    $('#incr_cond').val(columnData.INCR_DT_COND);
+                                }
+                            })
+                        }
+                    },
+                    error: function(error) {
+                        console.log(error);
+                    }
+                });
+            });
+            window.toggleProjectField = function()  {
+                var dropdown = $("#data_source");
+                var formFieldContainer = document.getElementById("formFieldContainer");
+                if (dropdown.val() === 'TD') {
+                    console.log("inside td")
+                    formFieldContainer.style.display ="none";
+                } else {
+                    formFieldContainer.style.display ="block";
+                }
+            }
+            toggleProjectField();
+            $("#data_source").change(function() {
+                toggleProjectField();
+            });
+            window.checkAccess = function() {
+                console.log("inside checkaccess");
+                var dropdown = $("#data_source");
+                var project_name = $("#project_name");
+                var formFieldContainer = document.getElementById("formFieldContainer");
+                console.log(dropdown);
+                if (project_name.is(":visible") && project_name.val().trim() === "") {
+                    alert("please fill all the values");
+                    window.location.reload();
+                    return;
+                } 
+            };
+            $("#submitButton").click(function () {
+                $("#pageloader").fadeIn();
+            });
+
+        });
+    </script>
+    <style>
+        .additionalFields {
+            margin-bottom: 10px;
+        }
+        #connectionForm {
+            max-width: 400px;
+            margin: 0 auto;
+            padding: 20px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            margin-top: 10px;
+        }
+        .grid-layout {
+            display: grid;
+            grid-template-columns: auto;
+            grid-gap: 10px;
+        }
+        .column-checkbox,
+        .critical-checkbox,
+        .unique-checkbox,
+        .incrdate-checkbox {
+            margin-right: 10px;
+        }
+        .column-container {
+            display: flex;
+            /* flex-direction: column; */
+            align-items: center;
+            margin-bottom: 10px;
+        .form-container select {
+            width: 100px;
+            height: 30px;
+            padding: 5px;
+            font-size: 14px;
+        }
+        .form-container select option {
+            font-size: 14px;
+        }
+        }
+        @font-face {
+            font-family: "v-NHaasGrotesk-font";
+            src: url("/static/fonts/NHaasGroteskTXW01-75Bd.ttf") format("truetype");
+        }
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: "v-NHaasGrotesk-font";
+            margin-bottom: 60px;
+            min-height: 100vh;
+           
+
+        }
+ 
+        header {
+            background-color: #000000;
+            overflow: hidden;
+            color: #ffffff;
+            font-family: "v-NHaasGrotesk-font";
+        }
+    
+        header img#left-image1 {
+            float: left;
+            margin-left: 0px;
+            width: 75px;
+            height: auto;
+            margin-top: 30px;
+        }
+        header img#left-image2 {
+            float: left;
+            margin-left: -40px;
+            width: 150px;
+            height: auto;
+            margin-top: 5px;
+        }
+        header img.right-img {
+            width: 45px;
+            height: auto;   
+            float: right;
+            margin-right: 10px;
+            margin-top: 10px;
+        }
+        header nav {
+            float: none;
+            text-align: center;
+            margin-top: 50px;
+            
+        }
+        header a {
+            color: #ffffff;
+            font-weight: bold;
+            margin: 0 15px;
+            text-decoration: none;
+        }
+        .container {
+            max-width: 100px;
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0,0.1);
+        }
+        footer {
+            font-family: "v-NHaasGrotesk-font";
+            background-color: #000000;
+            color: #ffffff;
+            text-align: center;
+            padding: 35px 0;
+            margin-top: auto;
+            width: 100%;
+            align-items: center;
+            font-weight: bold;
+        
+            /* margin-bottom: -5px; */
+            
+        }
+        footer img {
+            width: 80px;
+            height: auto;
+            float:left;
+            /* margin-bottom: 10px; */
+        }
+        footer a {
+            font-family: "v-NHaasGrotesk-font";
+            color: #ffffff;
+            /* flex-grow: 1; */
+            margin: 0 10px;
+            text-decoration: none;
+            text-align: center;
+            /* margin-bottom: 10px; */
+            white-space: nowrap;
+        }
+        #welcome-box {
+            text-align: center;
+            padding: 10px;
+            font-size: 30px;
+        }
+        #welcome-message {
+                font-size: 36px;
+                font-weight: bold;
+                margin-bottom: 10px;
+        }
+        .title-page {
+            text-align: center;
+            padding: 10px 0;
+            background-color: #1e88e5;
+            color: #fff;
+        }
+        .welcome-text {
+            text-align: center;
+            padding: 20px 0;
+        }
+        .welcome-text p {
+            font-size: 18px;
+            opacity: 0.8;
+            margin: 0;
+        }
+        /* #content {
+            flex: 5;
+            padding: 20px;
+        } */
+        #favicon {
+            display: inline-block;
+            width: 16px;
+            height: 10px;
+            margin-right: 5px;
+        }
+        
+        
+        
+        
+        .connectButton, .btn-reset {
+        font-family: "v-NHaasGrotesk-font";
+        width: 30%;
+        padding: 10px;
+        font-size: 14px;
+        border: none;
+        text-align: center;
+        border-radius: 15px;
+        cursor: pointer;
+        transition: background-color 0.3s, color 0.3s;
+        }
+        .connectButton {
+            font-family: "v-NHaasGrotesk-font";
+            background-color: #000;
+            color: #fff;
+            text-align: center;
+            margin-bottom: 10px;
+        }
+        button[type = "submit"] {
+            margin-top: 20px;
+        }
+        .btn-primary:hover {
+            background-color: #333;
+        }
+        .btn-reset {
+            background-color: #fff;
+            color: #000;
+            border: 2px solid #333;
+        }
+        .btn-reset:hover {
+            background-color: #eee;
+        }
+        .btn-container {
+            display: flex;
+            gap: 10px;
+        }
+        
+        h2{
+            margin: 10px;
+            text-align: center;
+            color: #333;
+            margin-bottom: 20px;
+        }
+        form {
+            max-width: 500px;
+            margin-top: 60px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            margin-bottom: 60px;
+            /* text-align: center; */
+        }
+        label {
+            color: #555;
+            font-size: 14px;
+            display: block;
+            margin-bottom: 10px;
+        }
+        input {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #ddd;
+            box-sizing: border-box;
+            border-radius: 4px;
+            font-size: 14px;
+            transition: border-color 0.3s ease;
+        }
+        #pageloader
+        {
+          background: rgba( 255, 255, 255, 0.8 );
+          display: none;
+          height: 100%;
+          position: fixed;
+          width: 100%;
+          z-index: 9999;
+        }
+
+        #pageloader img
+        {
+          left: 50%;
+          margin-left: -32px;
+          margin-top: -32px;
+          position: absolute;
+          top: 50%;
+        }
+        
+    </style>
+    <footer>
+        <div id="footer img">
+            <img src="{% static 'css/images/verizon.png' %}" alt="footer image" width="50" height="50"> 
+        </div>
+        <div class="contact-us" id="footer a">
+            For more details contact:<a href="mailto:DQ-DEV-Team@verizon.com">DQ-DEV-Team@verizon.com</a>
+        </div> 
+    </footer>
+</body>
+</html>
