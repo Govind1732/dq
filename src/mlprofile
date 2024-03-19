@@ -1,0 +1,121 @@
+import React, { useEffect, useState } from 'react';
+import { Container, Row, Col, Form, Button } from 'react-bootstrap';
+import axios from 'axios';
+
+const MLProfile = () => {
+  const [data_source, setDataSource] = useState('');
+  const [project_name, setProject] = useState('');
+  const [dbname, setDatabase] = useState('');
+  const [table_name, setTable] = useState('');
+  const [IncreColumn, setIncreColumn] = useState('');
+  const [IncreCondition, setIncreCondition] = useState('');
+  const [email, setEmail] = useState('');
+  const [additionalData, setAdditionalData] = useState([""])
+  const [showProject, setShowProject] = useState(true);
+
+  const handleDataSourceChange = (e) => {
+    const selectedDataSource = e.target.value;
+    setDataSource(selectedDataSource);
+    setShowProject(selectedDataSource === 'GCP');
+  };
+
+  const connectivityHandler = async (e) => {
+    e.preventDefault();
+    try {
+      const response = await axios.post('http://127.0.0.1:8000/ui_fetch/', { data_source, project_name, dbname, table_name });
+
+      // Parse JSON response
+      const responseData = response.data;
+      console.log(responseData);
+      if (responseData.combination_exists) {
+        await fetchAdditionalDetails();
+      }
+    } catch (error) {
+      console.error('Error sending details', error);
+      alert("Connectivity/Access does not exist. Redirecting to marketplace to raise a request");
+    }
+  }
+
+  const fetchAdditionalDetails = async () => {
+    try {
+      const response = await axios.get('http://127.0.0.1:8000/ml_profiler_config_form/autopopulate_columns/');
+      const responseData = response.data;
+      console.log(responseData);
+      setAdditionalData(responseData);
+      setIncreColumn(responseData.IncreColumn);
+      setIncreCondition(responseData.IncreCondition);
+    } catch (error) {
+      console.error('Error fetching additional details', error);
+      alert("Connectivity/Access does not exist. Redirecting to marketplace to raise a request");
+      window.open('https://marketplace.verizon.com/#/subscriptionReqForm', '_blank');
+    }
+  }
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    try {
+      await axios.post('http://127.0.0.1:8000/dispatch_MLProfile_data/', {
+        data_source,
+        project_name,
+        dbname,
+        table_name,
+        IncreColumn,
+        IncreCondition,
+        email
+      });
+
+      // Clear form fields
+      setDataSource('');
+      setProject('');
+      setDatabase('');
+      setTable('');
+      setIncreColumn('');
+      setIncreCondition('');
+      setEmail('');
+
+      alert("ML Profile submitted successfully");
+    } catch (error) {
+      console.error('Error submitting ML Profile', error);
+    }
+  };
+
+  return (
+    <Container fluid>
+      <Row className="justify-content-center align-items-center my-xl-1">
+        <Col xl={5}>
+          <div className="px-5 py-2 rounded shadow-lg my-2">
+            <h2 className="mb-2 text-center">ML Profile Form</h2>
+
+            <Form onSubmit={connectivityHandler}>
+              <Form.Group className="mb-2" controlId="ControlInput1">
+                <Form.Label>Data Source</Form.Label>
+                <Form.Select value={data_source} onChange={handleDataSourceChange}>
+                  <option>Select Environment</option>
+                  <option value="GCP">GCP</option>
+                  <option value="Tera Data">Tera Data</option>
+                </Form.Select>
+              </Form.Group>
+
+              {/* Other form inputs */}
+
+              <div className="d-flex justify-content-center mb-2">
+                <Button variant="danger" type="submit">
+                  Check For Connectivity
+                </Button>
+              </div>
+            </Form>
+
+            {additionalData.length > 0 && (
+              <Form onSubmit={handleSubmit}>
+                {/* Additional form fields */}
+              </Form>
+            )}
+
+          </div>
+        </Col>
+      </Row>
+    </Container>
+  );
+};
+
+export default MLProfile;
