@@ -1,0 +1,118 @@
+import React, { useState } from 'react';
+import axios from 'axios';
+
+function MLProfilerForm() {
+  const [formData, setFormData] = useState({
+    data_source: '',
+    project_name: '',
+    dbname: '',
+    table_name: '',
+    incr_col: '',
+    incr_cond: '',
+    email: ''
+  });
+  const [loading, setLoading] = useState(false);
+  const [accessCheckResult, setAccessCheckResult] = useState('');
+  const [additionalFieldsVisible, setAdditionalFieldsVisible] = useState(false);
+
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setFormData(prevState => ({
+      ...prevState,
+      [name]: value
+    }));
+  };
+
+  const handleConnectivityCheck = () => {
+    setLoading(true);
+    axios.post('/table_repo/ui_fetch/', formData)
+      .then(response => {
+        setLoading(false);
+        if (response.data.combination_exists) {
+          setAccessCheckResult('Connectivity/Access does not exist. Redirecting to marketplace to raise a request');
+          window.open('https://marketplace.verizon.com/#/subscriptionReqForm', '_blank');
+          setAdditionalFieldsVisible(false);
+        } else {
+          setAccessCheckResult('Connectivity/Access available. Please fill the remaining fields for profiling');
+          setAdditionalFieldsVisible(true);
+          fetchAdditionalDetails();
+        }
+      })
+      .catch(error => {
+        setLoading(false);
+        console.error('Error checking connectivity:', error);
+      });
+  };
+
+  const fetchAdditionalDetails = () => {
+    axios.post('/ml_profiler_config_form/autopopulate_columns/', formData)
+      .then(response => {
+        setFormData(prevState => ({
+          ...prevState,
+          incr_col: response.data.INCR_DT_COL,
+          incr_cond: response.data.INCR_DT_COND
+        }));
+      })
+      .catch(error => {
+        console.error('Error fetching additional details:', error);
+      });
+  };
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    setLoading(true);
+    axios.post('/dispatch_MLProfile_data/', formData)
+      .then(response => {
+        setLoading(false);
+        console.log('ML Profiler Triggered:', response.data);
+      })
+      .catch(error => {
+        setLoading(false);
+        console.error('Error triggering ML Profiler:', error);
+      });
+  };
+
+  return (
+    <div>
+      <h2>ML Profiling Page</h2>
+      <form onSubmit={handleSubmit}>
+        <label htmlFor="data_source">Data Source</label>
+        <select name="data_source" id="data_source" onChange={handleChange} required>
+          <option value="" selected disabled>Select Environment</option>
+          <option value="GCP">GCP</option>
+          <option value="TD">Teradata</option>
+        </select>
+        {additionalFieldsVisible && (
+          <>
+            <label htmlFor="project_name">Select Project</label>
+            <input type="text" name="project_name" id="project_name" onChange={handleChange} />
+          </>
+        )}
+        <label htmlFor="dbname">Select Database</label>
+        <input type="text" name="dbname" id="dbname" onChange={handleChange} required />
+        <label htmlFor="table_name">Select Tables</label>
+        <input type="text" name="table_name" id="table_name" onChange={handleChange} required />
+        <div>
+          <button type="button" onClick={handleConnectivityCheck}>Check For Connectivity</button>
+        </div>
+        <div>{loading && <p>Loading...</p>}</div>
+        <div>{accessCheckResult && <p>{accessCheckResult}</p>}</div>
+        <div>
+          {additionalFieldsVisible && (
+            <>
+              <label htmlFor="incr_col">Incremental Column</label>
+              <input type="text" id="incr_col" name="incr_col" value={formData.incr_col} onChange={handleChange} />
+              <label htmlFor="incr_cond">Incremental Condition</label>
+              <input type="text" id="incr_cond" name="incr_cond" value={formData.incr_cond} onChange={handleChange} />
+              <label htmlFor="email">Email Distro</label>
+              <input type="email" id="email" name="email" onChange={handleChange} />
+              <button type="submit">Profile</button>
+            </>
+          )}
+        </div>
+      </form>
+    </div>
+  );
+}
+
+export default MLProfilerForm;
