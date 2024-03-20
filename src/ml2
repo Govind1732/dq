@@ -204,65 +204,80 @@ function MLProfile() {
   };
 
   const handleConnectivityCheck = () => {
-    setLoading(true);
-    axios.post('http://127.0.0.1:8000/ml_profiler_config_form/ui_fetch/', formData, {
-      headers: {
-        'Content-Type': 'application/json'
+  setLoading(true);
+  const formDataUrlEncoded = new URLSearchParams();
+  for (const [key, value] of Object.entries(formData)) {
+    formDataUrlEncoded.append(key, value);
+  }
+
+  axios.post('http://127.0.0.1:8000/ml_profiler_config_form/ui_fetch/', formDataUrlEncoded, {
+    headers: {
+      'Content-Type': 'application/x-www-form-urlencoded',
+    },
+  })
+    .then(response => {
+      setLoading(false);
+      if (response.data.combination_exists) {
+        setAccessCheckResult('Connectivity/Access does not exist. Redirecting to marketplace to raise a request');
+        setAdditionalFieldsVisible(false);
+      } else {
+        setAccessCheckResult('Connectivity/Access available. Please fill the remaining fields for profiling');
+        setAdditionalFieldsVisible(true);
+        fetchAdditionalDetails();
       }
     })
-      .then(response => {
-        setLoading(false);
-        if (response.data.combination_exists) {
-          setAccessCheckResult('Connectivity/Access does not exist. Redirecting to marketplace to raise a request');
-         // window.open('https://marketplace.verizon.com/#/subscriptionReqForm', '_blank');
-          setAdditionalFieldsVisible(false);
-        } else {
-          setAccessCheckResult('Connectivity/Access available. Please fill the remaining fields for profiling');
-          setAdditionalFieldsVisible(true);
-          fetchAdditionalDetails();
-        }
-      })
-      .catch(error => {
-        setLoading(false);
-        console.error('Error checking connectivity:', error);
-      });
-  };
+    .catch(error => {
+      setLoading(false);
+      console.error('Error checking connectivity:', error);
+    });
+};
 
   const fetchAdditionalDetails = () => {
-    axios.post('http://127.0.0.1:8000/ml_profiler_config_form/autopopulate_columns/', formData, {
-      headers: {
-        'Content-Type': 'application/json'
-      }
+  const formDataUrlEncoded = new URLSearchParams();
+  for (const [key, value] of Object.entries(formData)) {
+    formDataUrlEncoded.append(key, value);
+  }
+
+  axios.post('http://127.0.0.1:8000/ml_profiler_config_form/autopopulate_columns/', formDataUrlEncoded, {
+    headers: {
+      'Content-Type': 'application/x-www-form-urlencoded',
+    },
+  })
+    .then(response => {
+      setFormData(prevState => ({
+        ...prevState,
+        incr_col: response.data.INCR_DT_COL,
+        incr_cond: response.data.INCR_DT_COND
+      }));
     })
-      .then(response => {
-        setFormData(prevState => ({
-          ...prevState,
-          incr_col: response.data.INCR_DT_COL,
-          incr_cond: response.data.INCR_DT_COND
-        }));
-      })
-      .catch(error => {
-        console.error('Error fetching additional details:', error);
-      });
-  };
+    .catch(error => {
+      console.error('Error fetching additional details:', error);
+    });
+};
 
   const handleSubmit = (e) => {
-    e.preventDefault();
-    setLoading(true);
-    axios.post('http://127.0.0.1:8000/dispatch_MLProfile_data/', formData, {
-      headers: {
-        'Content-Type': 'application/json'
-      }
+  e.preventDefault();
+  setLoading(true);
+
+  const formDataUrlEncoded = new URLSearchParams();
+  for (const [key, value] of Object.entries(formData)) {
+    formDataUrlEncoded.append(key, value);
+  }
+
+  axios.post('http://127.0.0.1:8000/dispatch_MLProfile_data/', formDataUrlEncoded, {
+    headers: {
+      'Content-Type': 'application/x-www-form-urlencoded',
+    },
+  })
+    .then(response => {
+      setLoading(false);
+      console.log('ML Profiler Triggered:', response.data);
     })
-      .then(response => {
-        setLoading(false);
-        console.log('ML Profiler Triggered:', response.data);
-      })
-      .catch(error => {
-        setLoading(false);
-        console.error('Error triggering ML Profiler:', error);
-      });
-  };
+    .catch(error => {
+      setLoading(false);
+      console.error('Error triggering ML Profiler:', error);
+    });
+};
 
   return (
     <Container fluid>
