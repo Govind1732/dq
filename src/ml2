@@ -26,8 +26,7 @@ function MLProfile() {
 
   const handleConnectivityCheck = () => {
     setLoading(true);
-    console.log(formData)
-    axios.post('http://127.0.0.1:8000//ml_profiler_config_form/ui_fetch/', formData)
+    axios.post('http://127.0.0.1:8000/ml_profiler_config_form/ui_fetch/', formData)
       .then(response => {
         setLoading(false);
         if (response.data.combination_exists) {
@@ -82,97 +81,52 @@ function MLProfile() {
             <h2 className="mb-2 text-center">ML Profile Form</h2>
 
             <Form onSubmit={handleSubmit}>
-            {/* <fieldset disabled={additionalData.length>0}> */}
               <Form.Group className="mb-2" controlId="ControlInput1">
                 <Form.Label>Data Source</Form.Label>
-                <Form.Select value={data_source} id='data_source' name='data_source' onChange={handleChange}>
-                  <option value='' selected disabled>Select Environment</option>
+                <Form.Select value={formData.data_source} name='data_source' onChange={handleChange}>
+                  <option value='' disabled>Select Environment</option>
                   <option value="GCP">GCP</option>
                   <option value="Tera Data">Tera Data</option>
                 </Form.Select>    
               </Form.Group>
 
-              {/* {showProject && ( */}
-                <Form.Group className="mb-2" controlId="ControlInput2" style={{display:data_source==='GCP'?'block':'none'}}>
-                  <Form.Label>Select Project</Form.Label>
-                  <Form.Control type="text" id='project_name' value={project_name} name='project_name' required onChange={handleChange} placeholder="Project" className="custom-file-input" />
-                  <Form.Control.Feedback type="invalid">
-              Please choose a Project.
-            </Form.Control.Feedback>
-                </Form.Group>
-              {/* )} */}
+              <Form.Group className="mb-2" controlId="ControlInput2" style={{ display: formData.data_source === 'GCP' ? 'block' : 'none' }}>
+                <Form.Label>Select Project</Form.Label>
+                <Form.Control type="text" value={formData.project_name} name='project_name' onChange={handleChange} placeholder="Project" />
+              </Form.Group>
+
               <Form.Group className="mb-2" controlId="ControlInput3">
                 <Form.Label>Select Database</Form.Label>
-                <Form.Control type="text" value={dbname} id='dbname' name='dbname' required onChange={handleChange} placeholder="Database" />
-                <Form.Control.Feedback type="invalid">
-              Please choose a Database.
-            </Form.Control.Feedback>
+                <Form.Control type="text" value={formData.dbname} name='dbname' onChange={handleChange} placeholder="Database" />
               </Form.Group>
 
               <Form.Group className="mb-2" controlId="ControlInput4">
                 <Form.Label>Select Tables</Form.Label>
-                <Form.Control type="text" value={table_name} id='table_name' name='table_name' required onChange={handleChange} placeholder="Table" className="file-input" />
-                <Form.Control.Feedback type="invalid">
-              Please choose a Tables.
-            </Form.Control.Feedback>
+                <Form.Control type="text" value={formData.table_name} name='table_name' onChange={handleChange} placeholder="Table" />
               </Form.Group>
 
               <div className="d-flex justify-content-center mb-2">
                 <Button variant="danger" type="button" onClick={handleConnectivityCheck} disabled={loading}>
-                {loading?'Checking...':'Check For Connectivity'}
-                </Button>
-              </div>
-              {/* </fieldset> */}
-              {/* </Form> */}
-                {/* {additionalData.length>0 ?
-                
-                ( */}
-                  <div id='additionalFields' style={{display:IncreColumn && IncreCondition ? 'block':'none'}}>
-
-              <Form.Group className="mb-2" controlId="ControlInput4">
-                <Form.Label>Incremental Column</Form.Label>
-                <Form.Control type="text" value={IncreColumn} id='IncreColumn' name='IncreColumn' required onChange={handleChange} placeholder="Table" className="file-input" />
-                <Form.Control.Feedback type="invalid">
-              Please choose a Tables.
-            </Form.Control.Feedback>
-              </Form.Group>
-
-              <Form.Group className="mb-2" controlId="ControlInput4">
-                <Form.Label>Incremental Condition</Form.Label>
-                <Form.Control type="text" value={IncreCondition} id='IncreCondition' name='IncreCondition' required onChange={handleChange} placeholder="Table" className="file-input" />
-                <Form.Control.Feedback type="invalid">
-              Please choose a Tables.
-            </Form.Control.Feedback>
-              </Form.Group>
-
-              <Form.Group className="mb-2" controlId="ControlInput4">
-                <Form.Label>Select Email</Form.Label>
-                <Form.Control type="email" value={email} id='email' name='email' required onChange={handleChange} placeholder="Table" className="file-input" />
-                <Form.Control.Feedback type="invalid">
-              Please choose a Email.
-            </Form.Control.Feedback>
-              </Form.Group>
-
-              <div className="d-flex justify-content-center mb-2">
-                <Button variant="danger" type="submit">
-                Submit Profile
+                  {loading ? 'Checking...' : 'Check For Connectivity'}
                 </Button>
               </div>
 
-                </div>
-            </Form>
-                {/* ):""} */}
-              
-          </div>
-          {/* <div className="d-flex justify-content-around my-3">
-            <Button variant="dark" type="submit" className="px-5">
-              Download Report
-            </Button>
-          </div> */}
-        </Col>
-      </Row>
-    </Container>
-  );
-}
+              <div id='additionalFields' style={{ display: additionalFieldsVisible ? 'block' : 'none' }}>
+                <Form.Group className="mb-2" controlId="ControlInput5">
+                  <Form.Label>Incremental Column</Form.Label>
+                  <Form.Control type="text" value={formData.incr_col} name='incr_col' onChange={handleChange} placeholder="Incremental Column" />
+                </Form.Group>
 
-export default MLProfile;
+                <Form.Group className="mb-2" controlId="ControlInput6">
+                  <Form.Label>Incremental Condition</Form.Label>
+                  <Form.Control type="text" value={formData.incr_cond} name='incr_cond' onChange={handleChange} placeholder="Incremental Condition" />
+                </Form.Group>
+
+                <Form.Group className="mb-2" controlId="ControlInput7">
+                  <Form.Label>Select Email</Form.Label>
+                  <Form.Control type="email" value={formData.email} name='email' onChange={handleChange} placeholder="Email" />
+                </Form.Group>
+
+                <div className="d-flex justify-content-center mb-2">
+                  <Button variant="danger" type="submit">
+                    Submit
