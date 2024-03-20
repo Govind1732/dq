@@ -26,7 +26,11 @@ function MLProfile() {
 
   const handleConnectivityCheck = () => {
     setLoading(true);
-    axios.post('http://127.0.0.1:8000/ml_profiler_config_form/ui_fetch/', formData)
+    axios.post('http://127.0.0.1:8000/ml_profiler_config_form/ui_fetch/', formData, {
+      headers: {
+        'Content-Type': 'application/json'
+      }
+    })
       .then(response => {
         setLoading(false);
         if (response.data.combination_exists) {
@@ -46,7 +50,11 @@ function MLProfile() {
   };
 
   const fetchAdditionalDetails = () => {
-    axios.post('http://127.0.0.1:8000/ml_profiler_config_form/autopopulate_columns/', formData)
+    axios.post('http://127.0.0.1:8000/ml_profiler_config_form/autopopulate_columns/', formData, {
+      headers: {
+        'Content-Type': 'application/json'
+      }
+    })
       .then(response => {
         setFormData(prevState => ({
           ...prevState,
@@ -62,7 +70,11 @@ function MLProfile() {
   const handleSubmit = (e) => {
     e.preventDefault();
     setLoading(true);
-    axios.post('http://127.0.0.1:8000/dispatch_MLProfile_data/', formData)
+    axios.post('http://127.0.0.1:8000/dispatch_MLProfile_data/', formData, {
+      headers: {
+        'Content-Type': 'application/json'
+      }
+    })
       .then(response => {
         setLoading(false);
         console.log('ML Profiler Triggered:', response.data);
@@ -72,7 +84,6 @@ function MLProfile() {
         console.error('Error triggering ML Profiler:', error);
       });
   };
-
   return (
     <Container fluid>
       <Row className="justify-content-center align-items-center my-xl-1">
