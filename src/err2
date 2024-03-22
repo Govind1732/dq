@@ -1,0 +1,16 @@
+<QueryDict: {'data_source': ['TD'], 'project_name': [''], 'dbname': ['NTL_PRD_ALLVM'], 'table_name': ['DLA_SUM_FACT_V']}>
+C:\project\smartdq\dq_api
+User DB Inputs for verify: DLA_SUM_FACT_V
+select top 1 * from NTL_PRD_ALLVM.DLA_SUM_FACT_V
+query select top 1 * from NTL_PRD_ALLVM.DLA_SUM_FACT_V
+teradatasql {driver}://{conn_user_id}:{conn_password}@{server_name}/{db_name}?encryptdata=true
+encrypted_connection_string_section db_name: 'dga_dq_tbls', section: 'TD - Autoprofile'
+{driver}://{conn_user_id}:{conn_password}@{server_name}/{db_name}?encryptdata=true
+teradatasql://IDQPRDLD:Vzidq2023$@vztdev1.ebiz.verizon.com/dga_dq_tbls?encryptdata=true
+Error while trying to create Teradata DB Object : Can't load plugin: sqlalchemy.dialects:teradatasql
+Exception occured while accessing table, Error message : 'NoneType' object has no attribute 'cursor'
+Table(DLA_SUM_FACT_V) dont have access from DQAAS Server
+Output response: Table(DLA_SUM_FACT_V) dont have access from DQAAS Server
+None
+Output response2: {'combination_exists': True, 'message': 'Do not have access.'}
+[22/Mar/2024 14:28:36] "POST /ml_profiler_config_form/ui_fetch/ HTTP/1.1" 200 62
