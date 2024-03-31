@@ -1,0 +1,265 @@
+// import React, { useState } from 'react';
+// import { Container, Row, Col, Form, Button } from 'react-bootstrap';
+// // import '../index.css'; // Import your custom CSS file
+
+// const MLProfile = () => {
+//   const [dataSource, setDataSource] = useState('');
+//   const [showProject, setShowProject] = useState(true);
+
+//   const handleSubmit = (e) => {
+//     e.preventDefault();
+//     // Handle form submission
+//   };
+
+//   const handleDataSourceChange = (e) => {
+//     const selectedDataSource = e.target.value;
+//     setDataSource(selectedDataSource);
+//     setShowProject(selectedDataSource === 'GCP');
+//   };
+
+//   return (
+//     <Container fluid className=''>
+//       <Row className="justify-content-center align-items-center my-xl-1">
+//         <Col xl={4}>
+//           <div className="px-5 py-1 rounded shadow-lg">
+//             <h2 className="text-center">ML Profile Form</h2>
+//             <Form onSubmit={handleSubmit}>
+//               <Form.Group className="" controlId="ControlInput1">
+//                 <Form.Label>Data Source</Form.Label>
+//                 <Form.Select onChange={handleDataSourceChange}>
+//                   <option>Select Environment</option>
+//                   <option value="GCP">GCP</option>
+//                   <option value="Tera Data">Tera Data</option>
+//                 </Form.Select>
+//               </Form.Group>
+//               {showProject && (
+//                 <Form.Group className="" controlId="ControlInput2">
+//                   <Form.Label>Select Project</Form.Label>
+//                   <Form.Control type="text" placeholder="Project" className="custom-file-input" />
+//                 </Form.Group>
+//               )}
+//               <Form.Group className="" controlId="ControlInput3">
+//                 <Form.Label>Select Database</Form.Label>
+//                 <Form.Control type="text" placeholder="Database" />
+//               </Form.Group>
+//               <Form.Group className="" controlId="ControlInput4">
+//                 <Form.Label>Select Tables</Form.Label>
+//                 <Form.Control type="text" placeholder="Table" className="file-input" />
+//               </Form.Group>
+//               <div className="d-flex justify-content-center my-2">
+//                 <Button variant="danger" type="submit">
+//                   Submit
+//                 </Button>
+//               </div>
+//             </Form>
+//           </div>
+//           {/* <div className="d-flex justify-content-around my-3">
+//             <Button variant="dark" type="submit" className="px-5">
+//               Download Report
+//             </Button>
+//           </div> */}
+//         </Col>
+//       </Row>
+//     </Container>
+//   );
+// };
+
+// export default MLProfile;
+
+import React, { useState } from 'react';
+import axios from 'axios';
+import { Container, Row, Col, Form, Button, Breadcrumb, Alert, Modal } from 'react-bootstrap';
+import URLSearchParams from 'url-search-params'
+import { Navigate } from 'react-router-dom';
+
+function MLProfile() {
+  const [formData, setFormData] = useState({
+    data_source: '',
+    project_name: '',
+    dbname: '',
+    table_name: '',
+    incr_col: '',
+    incr_cond: '',
+    email: ''
+  });
+  const [loading, setLoading] = useState(false);
+  // const [accessCheckResult, setAccessCheckResult] = useState('');
+  const [additionalFieldsVisible, setAdditionalFieldsVisible] = useState(false);
+  const [show, setShow] = useState(false);
+  const handleClose = () => setShow(false);
+  // const handleShow = () => setShow(true);
+
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setFormData(prevState => ({
+      ...prevState,
+      [name]: value
+    }));
+  };
+
+  const handleConnectivityCheck = () => {
+    setLoading(true);
+    console.log(formData)
+    const formDataUrlEncoded = new URLSearchParams();
+    for (const [key, value] of Object.entries(formData)) {
+      formDataUrlEncoded.append(key, value);
+    }
+
+    axios.post('http://tdcldizcva002.ebiz.verizon.com:8000/ml_profiler_config_form/ui_fetch/', formDataUrlEncoded, {
+      headers: {
+        'Content-Type': 'application/x-www-form-urlencoded',
+      },
+    })
+      .then(response => {
+        setLoading(false);
+        console.log(response.data.combination_exists)
+        if (response.data.combination_exists) {
+          alert('Connectivity/Access does not exist. Redirecting to marketplace to raise a request');
+
+          setAdditionalFieldsVisible(false);
+        } else {
+          alert('Connectivity/Access available. Please fill the remaining fields for profiling');
+          setAdditionalFieldsVisible(true);
+          fetchAdditionalDetails();
+        }
+      })
+      .catch(error => {
+        setLoading(false);
+        console.error('Error checking connectivity:', error);
+        alert("error in handling data")
+      });
+  };
+
+  const fetchAdditionalDetails = () => {
+    const formDataUrlEncoded = new URLSearchParams();
+    for (const [key, value] of Object.entries(formData)) {
+      formDataUrlEncoded.append(key, value);
+    }
+
+    axios.post('http://tdcldizcva002.ebiz.verizon.com:8000/ml_profiler_config_form/autopopulate_columns/', formDataUrlEncoded, {
+      headers: {
+        'Content-Type': 'application/x-www-form-urlencoded',
+      },
+    })
+      .then(response => {
+        setFormData(prevState => ({
+          ...prevState,
+          incr_col: response.data.INCR_DT_COL,
+          incr_cond: response.data.INCR_DT_COND
+        }));
+      })
+      .catch(error => {
+        console.error('Error fetching additional details:', error);
+      });
+  };
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    setLoading(true);
+
+    const formDataUrlEncoded = new URLSearchParams();
+    for (const [key, value] of Object.entries(formData)) {
+      formDataUrlEncoded.append(key, value);
+    }
+
+
+    axios.post('http://tdcldizcva002.ebiz.verizon.com:8000/ml_profiler_config_form/dispatch_MLProfile_data/', formDataUrlEncoded, {
+      headers: {
+        'Content-Type': 'application/x-www-form-urlencoded',
+      },
+    })
+      .then(response => {
+        setLoading(false);
+        console.log('ML Profiler Triggered:', response.data);
+        <Navigate to='/dataQuality/mlProfileReports' />
+      })
+      .catch(error => {
+        setLoading(false);
+        console.error('Error triggering ML Profiler:', error);
+        alert('Error triggering ML Profiler:', error)
+      });
+  };
+
+  return (
+    <Container fluid className=''>
+      <Container fluid className="my-2 pt-3">
+        <Breadcrumb>
+          <Breadcrumb.Item active>ML Profile</Breadcrumb.Item>
+          <Breadcrumb.Item active><span className='fw-bold'>Submit Request</span></Breadcrumb.Item>
+        </Breadcrumb>
+      </Container>
+
+
+      <Container fluid className='mx-8 px-8 shadow-lg mb-2 bg-light-subtle'>
+
+
+        <Form onSubmit={handleSubmit}>
+          <h2 className="mb-2 text-center">ML Profile Form</h2>
+          <Row className="justify-content-center align-items-center">
+            <Col xl={3}>
+              <fieldset disabled={additionalFieldsVisible}>
+
+                <Form.Group className="mb-2" controlId="ControlInput1">
+                  <Form.Label>Data Source</Form.Label>
+                  <Form.Select value={formData.data_source} name='data_source' onChange={handleChange} required>
+                    <option value='' disabled>Select Environment</option>
+                    <option value="GCP">GCP</option>
+                    <option value="TD">Tera Data</option>
+                  </Form.Select>
+                </Form.Group>
+
+                <Form.Group className="mb-2" controlId="ControlInput2" style={{ display: formData.data_source === 'GCP' ? 'block' : 'none' }}>
+                  <Form.Label>Select Project</Form.Label>
+                  <Form.Control type="text" value={formData.project_name} name='project_name' onChange={handleChange} required placeholder="Project" />
+                </Form.Group>
+
+                <Form.Group className="mb-2" controlId="ControlInput3">
+                  <Form.Label>Select Database</Form.Label>
+                  <Form.Control type="text" value={formData.dbname} name='dbname' onChange={handleChange} required placeholder="Database" />
+                </Form.Group>
+
+                <Form.Group className="mb-2" controlId="ControlInput4">
+                  <Form.Label>Select Tables</Form.Label>
+                  <Form.Control type="text" value={formData.table_name} name='table_name' onChange={handleChange} required placeholder="Table" />
+                </Form.Group>
+
+                <div className="d-flex justify-content-center mb-2" >
+                  <Button variant="danger" type="button" onClick={handleConnectivityCheck} disabled={loading} style={{ display: additionalFieldsVisible ? 'none' : 'block' }}>
+                    {loading ? 'Checking...' : 'Check For Connectivity'}
+                  </Button>
+                </div>
+              </fieldset>
+            </Col>
+            <Col xl={3} style={{ display: additionalFieldsVisible ? 'block' : 'none' }}>
+
+              <Form.Group className="mb-2" controlId="ControlInput5">
+                <Form.Label>Incremental Column</Form.Label>
+                <Form.Control type="text" value={formData.incr_col} name='incr_col' onChange={handleChange} required placeholder="Incremental Column" />
+              </Form.Group>
+
+              <Form.Group className="mb-2" controlId="ControlInput6">
+                <Form.Label>Incremental Condition</Form.Label>
+                <Form.Control type="text" value={formData.incr_cond} name='incr_cond' onChange={handleChange} required placeholder="Incremental Condition" />
+              </Form.Group>
+
+              <Form.Group className="mb-2" controlId="ControlInput7">
+                <Form.Label>Select Email</Form.Label>
+                <Form.Control type="email" value={formData.email} name='email' onChange={handleChange} required placeholder="Email" />
+              </Form.Group>
+
+
+            </Col>
+            <div className="d-flex justify-content-center mb-2" >
+              <Button variant="danger" type="submit" style={{ display: additionalFieldsVisible ? 'block' : 'none' }}>
+                Submit Profile
+              </Button>
+            </div>
+          </Row>
+        </Form>
+
+      </Container>
+    </Container >
+  );
+}
+
+export default MLProfile;
