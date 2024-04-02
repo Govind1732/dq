@@ -1,8 +1,9 @@
 import React, { useState, CSSProperties } from "react";
 import { Container, Row, Col, Form, Button, Breadcrumb, Modal } from "react-bootstrap";
 import axios from "axios";
-import { GridLoader } from "react-spinners";
+import { GridLoader} from "react-spinners";
 import { css } from '@emotion/react'
+import './AutoProfile.css'
 // import URLSearchParams from 'url-search-params'
 
 const override: CSSProperties = {
@@ -15,11 +16,6 @@ const AutoProfile = () => {
 
   const [file, setFile] = useState(null)
   const [loading, setLoading] = useState(false)
-  const [show, setShow] = useState(false);
-
-  const handleClose = () => {
-    setShow(false);
-  }
 
   const handleFileChange = (e) => {
     const selectedFile = e.target.files[0];
@@ -72,7 +68,7 @@ const AutoProfile = () => {
 
 
 
-  return (
+  return (<>
     <Container fluid className={loading?'blur':''}>
       <Container fluid className="my-2 pt-3">
         <Breadcrumb>
@@ -100,10 +96,10 @@ const AutoProfile = () => {
                 Download sample Template(CSV)
               </a>
               <div className="d-flex justify-content-center my-3">
-                <Button variant="dark" onClick={resetHandler}>
+                <Button variant="dark" onClick={resetHandler} >
                   Reset
-                </Button>
-                <Button variant="dark" type="submit" onClick={handleUpload}>
+                </Button>{' '}
+                <Button variant="dark" type="submit" onClick={handleUpload} className="mx-2">
                   Submit
                 </Button>
               </div>
@@ -115,12 +111,14 @@ const AutoProfile = () => {
         </Row>
       </Container>
 
-      {loading &&
+      
+    </Container>
+    {loading &&
         <Container className="loading-overlay">
-          <GridLoader color="#ff0000" loading={loading} cssOverride={override} size={50} aria-label="Loading Spinner" data-testid='loader' />
+          <GridLoader color="#ff0000" loading={loading} cssOverride={override} size={20} aria-label="Loading Spinner" data-testid='loader' />
         </Container>
       }
-    </Container>
+    </>
   );
 };
 
