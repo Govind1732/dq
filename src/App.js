@@ -26,14 +26,19 @@ const App = () => {
           <Row className=''>
             <Col xl={12}>
               <Routes>
-                <Route path='/' element={<Home />} />
-                <Route path='/autoProfile' element={<AutoProfile />} />
-                <Route path="/autoviewedit" element={<AutoViewEdit/>}/>
-                <Route path='/rantdt' element={<RantDT />} />
-                <Route path='/corpData' element={<CorpData />} />
-                <Route path='/allProjects' element={<AllProjects />} />
-                <Route path='/mlProfile' element={<MLProfile />} />
-                {/* <Route path="/mlDownloadReport" element={<MLDownloadReport/>}/> */}
+                
+          <Route path="/dataQuality" element={<Home />} />
+          <Route path="/dataQuality/autoProfile" element={<AutoProfile />} />
+          <Route path="/dataQuality/autoviewedit" element={<AutoViewEdit />} />
+          <Route path="/dataQuality/rantdt" element={<RantDT />} />
+          <Route path="/dataQuality/rantdtviewedit" element={<RantDTViewEdit />} />
+          <Route path="/dataQuality/corpData" element={<CorpData />} />
+          <Route path="/dataQuality/corpDataviewedit" element={<CorpDataViewEdit />} />
+          <Route path="/dataQuality/allProjects" element={<AllProjects />} />
+          <Route path="/dataQuality/allProjectsviewedit" element={<AllProjectsviewEdit />} />
+          <Route path="/dataQuality/mlProfile" element={<MLProfile />} />
+          <Route path="/dataQuality/mlProfileReports" element={<MLProfileReports />} />
+        
               </Routes>
             </Col>
           </Row>
