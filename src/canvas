@@ -1,0 +1,105 @@
+Global configuration required to use rf-canvas-18:
+
+for using rf-canvas-18 you should configure node polyfills in your latest application because rf-canavs-18 rely on node polyfills for different functionalities the below given steps are one way to configure node polyfills
+
+Follow below steps: 
+
+1) Install Webpack version >5.
+2) Install all the dependencies for webpack such as webpack-cli & webpack-dev-server.
+3) Inside package.json replace start script to "start": "webpack serve --mode development".
+4) Install npm packages such as: html-webpack-plugin, stream-browserify, buffer, process & babel-loader if you don't have.
+5) Create .babelrc file & add below content:
+
+{
+  "presets": [
+      "@babel/preset-env",
+      "@babel/preset-react"
+  ]
+}
+
+6) Create webpack.config.js file & add below content:
+
+// Make Changes in this file according to your requirements.
+
+const path = require('path');
+const HtmlWebpackPlugin = require('html-webpack-plugin');
+const webpack=require('webpack')
+module.exports = {
+    entry: "./src/index.js",
+    resolve: {
+        extensions: ['.js', '.jsx', '.css', '.scss'],
+        fallback: {
+            "fs":false,
+            "crypto":false, //f you want to use this module also don't forget npm i crypto-browserify
+            "stream": require.resolve('stream-browserify'),
+            "buffer": require.resolve('buffer/'),
+        }
+    },
+    module: {
+        rules: [
+            {
+                test: /.js$|jsx/,
+                exclude: /node_modules/,
+                loader: 'babel-loader',
+            },
+            {
+                test: /.css$/,
+                use: [{
+                    loader: 'style-loader',
+                }, {
+                    loader: 'css-loader',
+                    options: {
+                        sourceMap: true,
+                        modules: true
+                    },
+                }],
+                include: /.module.css$/
+            },
+            {
+                test: /.css$/,
+                use: [
+                    'style-loader',
+                    'css-loader'
+                ],
+                exclude: /.module.css$/
+            },
+            {
+                test: /.scss$/,
+                use: ['style-loader', 'css-loader', 'sass-loader'],
+            },
+            {
+                test: /.custom_storybook.js$/i,
+                use: 'raw-loader',
+            },
+            {
+                test: /.(png|jpg|jpeg|gif|svg|woff|woff2|eot|ttf|ico)$/,
+                use: [
+                    {
+                        loader: 'file-loader',
+                        options: {
+                            limit: 10000
+                        }
+                    }
+                ]
+            },
+            {
+                test: /.(png|svg|jpg|jpeg|gif|ico)$/,
+                exclude: /node_modules/,
+                use: ['file-loader?name=[name].[ext]'] // ?name=[name].[ext] is only necessary to preserve the original file name
+            }
+        ],
+    },
+    plugins: [
+        new HtmlWebpackPlugin({
+            template: path.resolve(__dirname, 'public/index.html'),
+            inject: true
+        }),
+        new webpack.ProvidePlugin({
+            process:'process/browser',
+        }),
+        new webpack.ProvidePlugin({
+           Buffer:['buffer','Buffer']
+        })
+    ]
+};
+
